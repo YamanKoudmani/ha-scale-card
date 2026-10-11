@@ -6,7 +6,7 @@ Built in the same design language as the [Room Lights Card](https://github.com/Y
 
 [![HACS: Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://hacs.xyz/)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Lovelace-41BDF5.svg)](https://www.home-assistant.io/)
-[![Version](https://img.shields.io/badge/version-1.0.0-4db6ac.svg)](https://github.com/YamanKoudmani/ha-scale-card/releases)
+[![Version](https://img.shields.io/badge/version-1.0.1-4db6ac.svg)](https://github.com/YamanKoudmani/ha-scale-card/releases)
 
 <p align="center">
   <img src="docs/screenshot.png" alt="Smart Fitness Scale Card screenshot" width="600" />
@@ -40,7 +40,7 @@ Built in the same design language as the [Room Lights Card](https://github.com/Y
 2. Add this repository as a **Custom Repository** in HACS:
    - Go to **HACS → ⋮ → Custom repositories**
    - **Repository**: `https://github.com/YamanKoudmani/ha-scale-card`
-   - **Category**: `Lovelace`
+   - **Category**: `Dashboard`
 3. Search for **Smart Fitness Scale Card** in HACS and install it.
 4. Restart Home Assistant.
 5. Add the resource (HACS should do this automatically):
@@ -130,7 +130,7 @@ The card registers a visual editor (find it under **Add card → By card → Sma
 | `name`         | string  | **required**   | Display name shown in the card header                                                  |
 | `entities`     | array   | **required**   | List of sensor entities to show. See [Entity options](#entity-options)                 |
 | `icon`         | string  | `mdi:scale`    | Optional header icon override                                                          |
-| `primary`      | string  | `weight`       | Metric key **or** entity_id shown in the header status line and highlighted with the accent colour. Falls back to the first entity when the metric is not configured |
+| `primary`      | string  | *(auto)*       | Headline metric: the value shown in the header status line and the tile highlighted with the accent colour. Accepts an **entity_id** or a metric key. Auto = the `weight` metric if configured, otherwise the first entity. The visual editor writes an entity_id, so whatever you pick in the dropdown is what renders |
 | `show_updated` | boolean | `false`        | Footer line: `Updated 12 min ago`, `Updated 2 hr ago`, `Updated 2 d ago`, then a date  |
 | `show_bars`    | boolean | `false`        | Hairline 0-100 bar under percentage tiles                                              |
 | `compact`      | boolean | `false`        | Tighter layout: smaller header, no gap between tiles, tighter padding                  |
@@ -269,7 +269,7 @@ The card formats the entity's **state** as a number. If your integration stores 
 That tile has no `metric` key. Add one from the [Metric keys](#metric-keys) table to get the label, icon, unit and decimals.
 
 **The card is not in the picker**
-Hard-refresh the browser (`Ctrl+Shift+R` / `Cmd+Shift+R`). If it's still missing, open the browser console — a `SCALE-CARD v1.0.0` banner is logged on load. If you don't see it, the resource didn't load; double-check the URL and that the file is on disk.
+Hard-refresh the browser (`Ctrl+Shift+R` / `Cmd+Shift+R`). If it's still missing, open the browser console — a `SCALE-CARD v1.0.1` banner is logged on load. If you don't see it, the resource didn't load; double-check the URL and that the file is on disk.
 
 ---
 
@@ -279,7 +279,7 @@ Hard-refresh the browser (`Ctrl+Shift+R` / `Cmd+Shift+R`). If it's still missing
 npm install
 npm run build      # one-off production build into ./dist
 npm start          # rollup watch mode
-npm test           # vitest (74 cases over the formatting + resolution layer)
+npm test           # vitest (75 cases over the formatting + resolution layer)
 ```
 
 The built file is `dist/scale-card.js` — `hacs.json` points at this path (`content_in_root: false`).

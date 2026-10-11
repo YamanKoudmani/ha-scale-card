@@ -409,6 +409,23 @@ describe('resolvePrimaryTile', () => {
     expect(resolvePrimaryTile({ ...baseConfig, primary: 'sensor.bmr' })?.entity).toBe('sensor.bmr');
   });
 
+  it('resolves a primary entity_id when no metric keys are configured', () => {
+    // Regression: the editor's Headline metric dropdown used to list metric
+    // keys, so picking one on a card whose tiles were added without a `metric`
+    // could never match and silently fell back to Weight / the first entity.
+    // The editor now stores entity_ids, which must always resolve.
+    const plain: ScaleCardConfig = {
+      type: 'custom:scale-card',
+      name: 'Scale',
+      entities: [
+        { entity: 'sensor.scale_1', columns: 1 },
+        { entity: 'sensor.scale_2', columns: 2 },
+      ],
+      primary: 'sensor.scale_2',
+    };
+    expect(resolvePrimaryTile(plain)?.entity).toBe('sensor.scale_2');
+  });
+
   it('falls back to the weight metric when the primary is unknown', () => {
     expect(resolvePrimaryTile({ ...baseConfig, primary: 'sensor.nope' })?.entity).toBe('sensor.weight');
   });

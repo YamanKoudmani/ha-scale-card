@@ -34,6 +34,32 @@ export class ScaleCardEditor extends LitElement {
     };
   }
 
+  /** Dropdown options for the headline metric: the configured entities.
+   *  Value is always an entity_id so whatever the user picks is guaranteed
+   *  to resolve to a tile. */
+  private _primaryOptions(): Array<{ value: string; label: string }> {
+    const entities = (this._config?.entities ?? []).filter((e) => e.entity.length > 0);
+    return entities.map((e) => {
+      const friendly = this.hass?.states?.[e.entity]?.attributes?.friendly_name;
+      const label =
+        e.name ||
+        (e.metric ? METRIC_DEFAULTS[e.metric].label : '') ||
+        (typeof friendly === 'string' && friendly.length > 0 ? friendly : e.entity);
+      return { value: e.entity, label };
+    });
+  }
+
+  /** Current primary as an entity_id. A YAML `primary` written as a metric key
+   *  is mapped to its entity so the dropdown shows the right row. */
+  private _primaryValue(): string {
+    const cfg = this._config;
+    if (!cfg?.primary) return '';
+    const match = cfg.entities.find(
+      (e) => e.entity === cfg.primary || e.metric === cfg.primary,
+    );
+    return match?.entity ?? '';
+  }
+
   protected render(): TemplateResult {
     if (!this._config || !this.hass) return html``;
     const cfg = this._config;
@@ -45,9 +71,15 @@ export class ScaleCardEditor extends LitElement {
         name: 'primary',
         selector: {
           select: {
+            // Options are the CONFIGURED entities, not the metric registry.
+            // A metric-key dropdown can never resolve when the tiles were
+            // added without a `metric` (the usual case), so the picker would
+            // silently fall back to Weight / the first entity — which is the
+            // bug this fixes. Value is always an entity_id, so the choice
+            // always matches a tile.
             options: [
-              { value: '', label: 'Auto (Weight)' },
-              ...METRIC_KEYS.map((k) => ({ value: k, label: METRIC_DEFAULTS[k].label })),
+              { value: '', label: 'Auto (Weight, else first entity)' },
+              ...this._primaryOptions(),
             ],
             mode: 'dropdown',
           },
@@ -64,7 +96,7 @@ export class ScaleCardEditor extends LitElement {
         .data=${{
           name: cfg.name,
           icon: cfg.icon ?? '',
-          primary: cfg.primary ?? '',
+          primary: this._primaryValue(),
           show_updated: cfg.show_updated === true,
           show_bars: cfg.show_bars === true,
           compact: cfg.compact === true,
@@ -266,7 +298,7 @@ export class ScaleCardEditor extends LitElement {
       return 'When set, this icon always shows in the header. When left empty, the header shows mdi:scale.';
     }
     if (schema.name === 'primary') {
-      return 'The value shown under the card name, and the tile highlighted with the accent colour. Auto picks the Weight metric when present.';
+      return 'The value shown under the card name, and the tile highlighted with the accent colour. Pick one of the configured entities, or leave Auto to use Weight (falling back to the first entity).';
     }
     if (schema.name === 'show_updated') {
       return 'Shows how old the newest reading is (e.g. "Updated 2 hr ago").';

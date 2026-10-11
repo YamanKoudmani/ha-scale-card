@@ -1,6 +1,6 @@
 {
   "name": "scale-card",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A custom Home Assistant Lovelace card for smart fitness scales — body composition metrics in a single tappable card.",
   "keywords": [
     "home-assistant",

@@ -1,6 +1,6 @@
 import type { MetricEntityConfig, MetricKey, MetricDefaults } from './types';
 
-export const CARD_VERSION = '1.0.0';
+export const CARD_VERSION = '1.0.1';
 
 /** Accent color for the active reading + icons (health teal).
  *  Overridable per dashboard with `--accent-on`. */
