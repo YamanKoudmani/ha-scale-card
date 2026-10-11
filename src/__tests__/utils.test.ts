@@ -12,6 +12,7 @@ import {
   formatRelativeTime,
   resolveMetricTile,
   resolvePrimaryTile,
+  cardTitle,
   gridEntities,
   newestUpdate,
 } from '../utils';
@@ -474,6 +475,36 @@ describe('header value', () => {
   it('"Unavailable" when the headline sensor is down', () => {
     const cfg = { ...baseConfig, entities: [entities[0]] };
     expect(resolveMetricTile(hass, resolvePrimaryTile(cfg)!).value).toBe('Unavailable');
+  });
+});
+
+describe('cardTitle', () => {
+  const hass = makeHass({
+    'sensor.weight': sensor('79.13'),
+    'sensor.body_fat': sensor('20.3'),
+  });
+
+  it('defaults to the headline metric name when no title is set', () => {
+    expect(cardTitle(hass, { ...baseConfig, name: undefined })).toBe('Weight');
+  });
+
+  it('follows the headline metric', () => {
+    expect(cardTitle(hass, { ...baseConfig, name: undefined, primary: 'body_fat' })).toBe('Body Fat Percentage');
+  });
+
+  it('an explicit title wins', () => {
+    expect(cardTitle(hass, { ...baseConfig, name: 'Body Composition' })).toBe('Body Composition');
+  });
+
+  it('uses the friendly name when no metric key is set', () => {
+    const h = makeHass({ 'sensor.scale_1': sensor('79.13', { friendly_name: 'Morning weigh-in' }) });
+    expect(
+      cardTitle(h, { type: 'custom:scale-card', entities: [{ entity: 'sensor.scale_1', columns: 1 }] }),
+    ).toBe('Morning weigh-in');
+  });
+
+  it('falls back to "Body Composition" with nothing configured', () => {
+    expect(cardTitle(hass, { type: 'custom:scale-card', entities: [] })).toBe('Body Composition');
   });
 });
 

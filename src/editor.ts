@@ -94,7 +94,7 @@ export class ScaleCardEditor extends LitElement {
       <ha-form
         .hass=${this.hass}
         .data=${{
-          name: cfg.name,
+          name: cfg.name ?? '',
           icon: cfg.icon ?? '',
           primary: this._primaryValue(),
           show_updated: cfg.show_updated === true,
@@ -236,7 +236,7 @@ export class ScaleCardEditor extends LitElement {
     // stays clean (no `compact: false` on every config).
     const newConfig: ScaleCardConfig = {
       ...this._config,
-      name: value.name ?? '',
+      name: value.name && value.name.trim().length > 0 ? value.name.trim() : undefined,
       icon: value.icon && value.icon.trim().length > 0 ? value.icon.trim() : undefined,
       primary: value.primary && value.primary.length > 0 ? value.primary : undefined,
       show_updated: value.show_updated === true ? true : undefined,
@@ -284,7 +284,7 @@ export class ScaleCardEditor extends LitElement {
   // ---------------------------------------------------------------------------
 
   private _computeRootLabel = (schema: HaFormSchemaItem): string => {
-    if (schema.name === 'name') return 'Card name';
+    if (schema.name === 'name') return 'Card title (optional)';
     if (schema.name === 'icon') return 'Card icon (optional)';
     if (schema.name === 'primary') return 'Headline metric';
     if (schema.name === 'show_updated') return 'Show "Updated …" line';
@@ -294,6 +294,9 @@ export class ScaleCardEditor extends LitElement {
   };
 
   private _computeRootHelper = (schema: HaFormSchemaItem): string => {
+    if (schema.name === 'name') {
+      return "Leave blank to use the headline metric's name, e.g. \"Weight\". Set it to override the title.";
+    }
     if (schema.name === 'icon') {
       return 'When set, this icon always shows in the header. When left empty, the header shows mdi:scale.';
     }

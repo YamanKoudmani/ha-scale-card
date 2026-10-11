@@ -11,6 +11,7 @@ import {
 } from './const';
 import type { ScaleCardConfig, MetricTileInfo, MetricEntityConfig } from './types';
 import {
+  cardTitle,
   formatRelativeTime,
   gridEntities,
   newestUpdate,
@@ -34,7 +35,6 @@ export class ScaleCard extends LitElement {
 
   static getStubConfig(): Record<string, unknown> {
     return {
-      name: 'Body Composition',
       entities: [
         { entity: 'sensor.weight', metric: 'weight', columns: 1 },
         { entity: 'sensor.body_fat', metric: 'body_fat', columns: 2 },
@@ -81,9 +81,6 @@ export class ScaleCard extends LitElement {
   public setConfig(config: ScaleCardConfig): void {
     if (!config || typeof config !== 'object') {
       throw new Error('Invalid configuration');
-    }
-    if (!config.name) {
-      throw new Error('You must define a `name` for the card');
     }
     if (!Array.isArray(config.entities) || config.entities.length === 0) {
       throw new Error('You must define at least one entity in `entities`');
@@ -144,6 +141,7 @@ export class ScaleCard extends LitElement {
     );
 
     const headerIcon = cfg.icon ?? HEADER_ICON;
+    const title = cardTitle(this.hass, cfg);
     const headerStatus = headerTile ? headerTile.value : 'No metrics';
     const hasData = !!headerTile && !headerTile.isUnavailable;
     const updated = cfg.show_updated
@@ -158,12 +156,12 @@ export class ScaleCard extends LitElement {
             data-header
             role="button"
             tabindex="0"
-            aria-label=${primaryId ? `Open ${primaryId}` : cfg.name}
+            aria-label=${primaryId ? `Open ${primaryId}` : title}
             @click=${this._onHeaderClick}
             @keydown=${this._onHeaderKey}
           >
             <ha-icon class="header-icon" icon=${headerIcon}></ha-icon>
-            <div class="header-name">${cfg.name}</div>
+            <div class="header-name">${title}</div>
             <div class="header-status ${headerTile && !headerTile.isUnavailable ? 'live' : 'stale'}">${headerStatus}</div>
           </div>
 

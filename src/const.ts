@@ -1,6 +1,6 @@
 import type { MetricEntityConfig, MetricKey, MetricDefaults } from './types';
 
-export const CARD_VERSION = '1.1.0';
+export const CARD_VERSION = '1.2.0';
 
 /** Accent color for the active reading + icons (health teal).
  *  Overridable per dashboard with `--accent-on`. */
@@ -12,6 +12,9 @@ export const HEADER_ICON = 'mdi:scale';
 
 /** Tile fallback icon (used only when the tile has no metric key). */
 export const FALLBACK_TILE_ICON = 'mdi:gauge';
+
+/** Title used when no `name` is set and no headline metric can be named. */
+export const DEFAULT_TITLE = 'Body Composition';
 
 /** Default layout values */
 export const DEFAULT_COLUMNS: 1 | 2 = 1; // 1 = full width, 2 = half width

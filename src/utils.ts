@@ -1,6 +1,6 @@
 import type { HomeAssistant } from 'custom-card-helpers';
 import type { HassEntity } from 'home-assistant-js-websocket';
-import { FALLBACK_TILE_ICON, metricDefaults } from './const';
+import { DEFAULT_TITLE, FALLBACK_TILE_ICON, metricDefaults } from './const';
 import type {
   MetricEntityConfig,
   ScaleCardConfig,
@@ -126,6 +126,37 @@ export function gridEntities(config: ScaleCardConfig): MetricEntityConfig[] {
   return config.entities.filter((e) => e !== primary);
 }
 
+/** Display name for a metric: custom override → metric label (short on half
+ *  tiles) → friendly_name → entity_id → "Unknown". Overrides are already
+ *  trimmed by normalizeMetricConfig. */
+export function displayName(
+  hass: HomeAssistant | undefined,
+  config: MetricEntityConfig,
+  short = false,
+): string {
+  if (config.name && config.name.length > 0) return config.name;
+  const defaults = metricDefaults(config.metric);
+  const label = defaults ? (short ? defaults.short : defaults.label) : '';
+  if (label.length > 0) return label;
+  const friendly = getStateObj(hass, config.entity)?.attributes?.friendly_name;
+  if (typeof friendly === 'string' && friendly.length > 0) return friendly;
+  if (config.entity) return config.entity;
+  return 'Unknown';
+}
+
+/** Card title: an explicit `name`, otherwise the headline metric's name
+ *  (e.g. "Weight"), falling back to "Body Composition" when nothing is set. */
+export function cardTitle(
+  hass: HomeAssistant | undefined,
+  config: ScaleCardConfig,
+): string {
+  const custom = typeof config.name === 'string' ? config.name.trim() : '';
+  if (custom) return custom;
+  const primary = resolvePrimaryTile(config);
+  if (!primary) return DEFAULT_TITLE;
+  return displayName(hass, primary, false) || DEFAULT_TITLE;
+}
+
 /** Resolve a single config entry to render-ready info. */
 export function resolveMetricTile(
   hass: HomeAssistant | undefined,
@@ -143,24 +174,8 @@ export function resolveMetricTile(
     typeof config.decimals === 'number' ? config.decimals : defaults?.decimals ?? 2;
 
   // Name: custom override → metric label (short on half tiles) →
-  // friendly_name → entity_id → "Unknown". Overrides are already trimmed
-  // by normalizeMetricConfig.
-  const friendly = stateObj?.attributes?.friendly_name;
-  const metricLabel = defaults
-    ? config.columns === 2 ? defaults.short : defaults.label
-    : '';
-  let name: string;
-  if (config.name && config.name.length > 0) {
-    name = config.name;
-  } else if (metricLabel.length > 0) {
-    name = metricLabel;
-  } else if (typeof friendly === 'string' && friendly.length > 0) {
-    name = friendly;
-  } else if (config.entity) {
-    name = config.entity;
-  } else {
-    name = 'Unknown';
-  }
+  // friendly_name → entity_id → "Unknown".
+  const name = displayName(hass, config, config.columns === 2);
 
   // Icon: custom override → metric default → fallback.
   const icon =

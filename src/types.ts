@@ -57,7 +57,9 @@ export interface MetricEntityConfig {
 /** Root card config */
 export interface ScaleCardConfig extends LovelaceCardConfig {
   type: string;
-  name: string;
+  /** Card title. Optional: falls back to the headline metric's name
+   *  (e.g. "Weight"), then to "Body Composition". */
+  name?: string;
   entities: MetricEntityConfig[];
   /** Optional custom icon override for the card header. */
   icon?: string;
