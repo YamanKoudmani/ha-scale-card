@@ -12,7 +12,7 @@ import {
 import type { ScaleCardConfig, MetricTileInfo, MetricEntityConfig } from './types';
 import {
   formatRelativeTime,
-  headerStatusText,
+  gridEntities,
   newestUpdate,
   resolveMetricTile,
   resolvePrimaryTile,
@@ -136,13 +136,16 @@ export class ScaleCard extends LitElement {
     const cfg = this._config;
     const primary: MetricEntityConfig | null = resolvePrimaryTile(cfg);
     const primaryId = primary?.entity ?? '';
-    const tiles: MetricTileInfo[] = cfg.entities.map((e) =>
-      resolveMetricTile(this.hass, e, primaryId),
+    // The headline metric lives in the header, so it is never repeated as a
+    // tile below it.
+    const headerTile = primary ? resolveMetricTile(this.hass, primary) : null;
+    const tiles: MetricTileInfo[] = gridEntities(cfg).map((e) =>
+      resolveMetricTile(this.hass, e),
     );
 
     const headerIcon = cfg.icon ?? HEADER_ICON;
-    const headerStatus = headerStatusText(this.hass, cfg);
-    const hasData = tiles.some((t) => !t.isUnavailable);
+    const headerStatus = headerTile ? headerTile.value : 'No metrics';
+    const hasData = !!headerTile && !headerTile.isUnavailable;
     const updated = cfg.show_updated
       ? formatRelativeTime(newestUpdate(this.hass, cfg.entities))
       : '';
@@ -161,7 +164,7 @@ export class ScaleCard extends LitElement {
           >
             <ha-icon class="header-icon" icon=${headerIcon}></ha-icon>
             <div class="header-name">${cfg.name}</div>
-            <div class="header-status">${headerStatus}</div>
+            <div class="header-status ${headerTile && !headerTile.isUnavailable ? 'live' : 'stale'}">${headerStatus}</div>
           </div>
 
           <div class="grid">
@@ -177,14 +180,14 @@ export class ScaleCard extends LitElement {
   }
 
   private _renderTile(tile: MetricTileInfo): TemplateResult {
-    const { config, name, icon, value, barPercent, isUnavailable, isPrimary } = tile;
+    const { config, name, icon, value, barPercent, isUnavailable } = tile;
     const stateClass = isUnavailable ? 'unavailable' : 'live';
     const sizeClass = config.columns === 2 ? 'tile-half' : 'tile-full';
     const showBar = this._config?.show_bars === true && barPercent !== null;
 
     return html`
       <div
-        class="tile ${sizeClass} ${stateClass} ${isPrimary ? 'hero' : ''}"
+        class="tile ${sizeClass} ${stateClass}"
         data-tile
         data-entity-id=${config.entity}
         role="button"
@@ -255,12 +258,13 @@ export class ScaleCard extends LitElement {
   // ---------------------------------------------------------------------------
 
   /** Count grid rows for getCardSize (masonry view). Half tiles stack two
-   *  per row; full tiles (and the hero tile) take a whole row. */
+   *  per row; full tiles take a whole row. The headline metric lives in the
+   *  header, so it is not counted here. */
   private _computeRows(): number {
     if (!this._config) return 0;
     let fullRows = 0;
     let halfCount = 0;
-    for (const e of this._config.entities) {
+    for (const e of gridEntities(this._config)) {
       if (e.columns === 1) fullRows += 1;
       else halfCount += 1;
     }
@@ -337,13 +341,17 @@ export class ScaleCard extends LitElement {
       max-width: 100%;
     }
     .header-status {
-      font-size: 13px;
+      font-size: 16px;
+      font-weight: 600;
       color: var(--secondary-text-color);
-      line-height: 1.2;
+      line-height: 1.25;
       font-variant-numeric: tabular-nums;
     }
-    .header.on .header-status {
+    .header-status.live {
       color: var(--accent-on, var(--_scale-accent, #4db6ac));
+    }
+    .header-status.stale {
+      color: var(--disabled-text-color, #9e9e9e);
     }
 
     /* Grid ----------------------------------------------------------------- */
@@ -362,7 +370,8 @@ export class ScaleCard extends LitElement {
       padding: 12px 14px;
       /* Tiles default to transparent so they impose no colour of their own —
          they show the card's (theme-owned) surface through and separate by
-         border + the accent ring on the hero tile. */
+         border. The headline value lives in the header, so no tile gets
+         accent styling of its own. */
       background: var(--ha-card-background-tile, transparent);
       border: 1px solid var(--divider-color, rgba(0, 0, 0, 0.08));
       border-radius: 10px;
@@ -389,9 +398,6 @@ export class ScaleCard extends LitElement {
     }
     .tile.unavailable {
       opacity: 0.55;
-    }
-    .tile.hero {
-      border-color: var(--accent-on, var(--_scale-accent, #4db6ac));
     }
     .tile-icon-wrap {
       flex-shrink: 0;
@@ -434,10 +440,6 @@ export class ScaleCard extends LitElement {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-    }
-    .tile.hero .tile-value {
-      font-size: 18px;
-      color: var(--accent-on, var(--_scale-accent, #4db6ac));
     }
     .tile.unavailable .tile-value {
       color: var(--disabled-text-color, #9e9e9e);
@@ -488,9 +490,6 @@ export class ScaleCard extends LitElement {
       padding: 10px 12px;
       border-radius: 6px;
       border-color: var(--divider-color, rgba(0, 0, 0, 0.12));
-    }
-    ha-card.compact .tile.hero {
-      border-color: var(--accent-on, var(--_scale-accent, #4db6ac));
     }
     ha-card.compact .footer {
       margin-top: 8px;

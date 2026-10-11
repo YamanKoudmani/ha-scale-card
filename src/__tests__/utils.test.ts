@@ -12,7 +12,7 @@ import {
   formatRelativeTime,
   resolveMetricTile,
   resolvePrimaryTile,
-  headerStatusText,
+  gridEntities,
   newestUpdate,
 } from '../utils';
 import {
@@ -371,13 +371,6 @@ describe('resolveMetricTile', () => {
     expect(t.stateObj).toBeNull();
   });
 
-  it('flags the primary tile', () => {
-    const t = resolveMetricTile(hass, { entity: 'sensor.weight', metric: 'weight', columns: 1 }, 'sensor.weight');
-    expect(t.isPrimary).toBe(true);
-    const other = resolveMetricTile(hass, { entity: 'sensor.bmi', metric: 'bmi', columns: 2 }, 'sensor.weight');
-    expect(other.isPrimary).toBe(false);
-  });
-
   it('computes bar percent for percentage metrics', () => {
     const t = resolveMetricTile(hass, { entity: 'sensor.body_fat', metric: 'body_fat', columns: 2 });
     expect(t.barPercent).toBe(20.3);
@@ -385,7 +378,7 @@ describe('resolveMetricTile', () => {
 });
 
 // ---------------------------------------------------------------------------
-// resolvePrimaryTile / headerStatusText
+// resolvePrimaryTile / gridEntities
 // ---------------------------------------------------------------------------
 
 const entities: MetricEntityConfig[] = [
@@ -440,28 +433,47 @@ describe('resolvePrimaryTile', () => {
   });
 });
 
-describe('headerStatusText', () => {
+describe('gridEntities', () => {
+  it('excludes the headline metric so the value is never shown twice', () => {
+    expect(gridEntities(baseConfig).map((e) => e.entity)).toEqual([
+      'sensor.bmr',
+      'sensor.body_fat',
+    ]);
+  });
+
+  it('excludes the headline when primary is an entity_id', () => {
+    expect(
+      gridEntities({ ...baseConfig, primary: 'sensor.bmr' }).map((e) => e.entity),
+    ).toEqual(['sensor.weight', 'sensor.body_fat']);
+  });
+
+  it('empty when the headline is the only entity', () => {
+    expect(gridEntities({ ...baseConfig, entities: [entities[1]] })).toEqual([]);
+  });
+
+  it('empty for an empty entity list', () => {
+    expect(gridEntities({ ...baseConfig, entities: [] })).toEqual([]);
+  });
+});
+
+describe('header value', () => {
   const hass = makeHass({
     'sensor.weight': sensor('79.13'),
     'sensor.body_fat': sensor('20.3'),
   });
 
-  it('shows the primary value', () => {
-    expect(headerStatusText(hass, baseConfig)).toBe('79.13 kg');
+  it('shows the headline metric value', () => {
+    expect(resolveMetricTile(hass, resolvePrimaryTile(baseConfig)!).value).toBe('79.13 kg');
   });
 
   it('follows the configured primary', () => {
-    expect(
-      headerStatusText(hass, { ...baseConfig, entities: [entities[2]], primary: 'body_fat' }),
-    ).toBe('20.3%');
+    const cfg = { ...baseConfig, entities: [entities[2]], primary: 'body_fat' };
+    expect(resolveMetricTile(hass, resolvePrimaryTile(cfg)!).value).toBe('20.3%');
   });
 
-  it('"No metrics" for an empty list', () => {
-    expect(headerStatusText(hass, { ...baseConfig, entities: [] })).toBe('No metrics');
-  });
-
-  it('"Unavailable" when the primary sensor is down', () => {
-    expect(headerStatusText(hass, { ...baseConfig, entities: [entities[0]] })).toBe('Unavailable');
+  it('"Unavailable" when the headline sensor is down', () => {
+    const cfg = { ...baseConfig, entities: [entities[0]] };
+    expect(resolveMetricTile(hass, resolvePrimaryTile(cfg)!).value).toBe('Unavailable');
   });
 });
 

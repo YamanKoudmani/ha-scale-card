@@ -61,8 +61,8 @@ export interface ScaleCardConfig extends LovelaceCardConfig {
   entities: MetricEntityConfig[];
   /** Optional custom icon override for the card header. */
   icon?: string;
-  /** Metric key (or entity_id) shown in the header status line and styled
-   *  as the hero tile when it is also present in `entities`.
+  /** Metric key (or entity_id) the header shows as the headline reading.
+   *  That entity is NOT repeated as a tile below it.
    *  Defaults to `weight` when that metric is configured, else the first entity. */
   primary?: string;
   /** Show the "Updated …" footer line built from the newest last_updated. */
@@ -85,6 +85,4 @@ export interface MetricTileInfo {
   /** 0-100 bar width for percentage metrics, null for anything else. */
   barPercent: number | null;
   isUnavailable: boolean;
-  /** True when this tile is the header's primary metric (hero styling). */
-  isPrimary: boolean;
 }

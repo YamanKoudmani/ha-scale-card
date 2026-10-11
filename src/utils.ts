@@ -96,7 +96,7 @@ export function formatRelativeTime(iso: string | undefined): string {
   return new Date(t).toLocaleDateString();
 }
 
-/** Resolve the tile that the header represents.
+/** Resolve the metric the header shows.
  *  `primary` accepts a metric key ("weight") or an entity_id; falls back to
  *  the weight metric, then the first configured entity. */
 export function resolvePrimaryTile(
@@ -118,11 +118,18 @@ export function resolvePrimaryTile(
   return entities[0];
 }
 
+/** Entities rendered as tiles — everything EXCEPT the header metric, so the
+ *  headline value is never shown twice. */
+export function gridEntities(config: ScaleCardConfig): MetricEntityConfig[] {
+  const primary = resolvePrimaryTile(config);
+  if (!primary) return [];
+  return config.entities.filter((e) => e !== primary);
+}
+
 /** Resolve a single config entry to render-ready info. */
 export function resolveMetricTile(
   hass: HomeAssistant | undefined,
   config: MetricEntityConfig,
-  primaryEntityId?: string,
 ): MetricTileInfo {
   const stateObj = getStateObj(hass, config.entity);
   const defaults = metricDefaults(config.metric);
@@ -179,7 +186,6 @@ export function resolveMetricTile(
     value,
     barPercent: barPercent(stateObj, unit),
     isUnavailable: unavailable,
-    isPrimary: !!primaryEntityId && config.entity === primaryEntityId,
   };
 }
 
@@ -203,16 +209,5 @@ export function newestUpdate(
     }
   }
   return bestIso;
-}
-
-/** Header status line: the primary metric's value, or a short fallback. */
-export function headerStatusText(
-  hass: HomeAssistant | undefined,
-  config: ScaleCardConfig,
-): string {
-  const primary = resolvePrimaryTile(config);
-  if (!primary) return 'No metrics';
-  const tile = resolveMetricTile(hass, primary);
-  return tile.value;
 }
 

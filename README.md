@@ -6,7 +6,7 @@ Built in the same design language as the [Room Lights Card](https://github.com/Y
 
 [![HACS: Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://hacs.xyz/)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Lovelace-41BDF5.svg)](https://www.home-assistant.io/)
-[![Version](https://img.shields.io/badge/version-1.0.1-4db6ac.svg)](https://github.com/YamanKoudmani/ha-scale-card/releases)
+[![Version](https://img.shields.io/badge/version-1.1.0-4db6ac.svg)](https://github.com/YamanKoudmani/ha-scale-card/releases)
 
 <p align="center">
   <img src="docs/screenshot.png" alt="Smart Fitness Scale Card screenshot" width="600" />
@@ -20,7 +20,7 @@ Built in the same design language as the [Room Lights Card](https://github.com/Y
 
 - **Tile grid of metrics** — every sensor gets its own tile: icon, label, value
 - **Metric registry** — 14 known metrics come with a sensible label, icon, unit and decimal count out of the box
-- **Headline metric** — the header shows your primary reading (Weight by default) and highlights that tile with the accent colour
+- **Headline metric** — the header shows your headline reading (Weight by default). That entity is the header, so it is never repeated as a tile below it
 - **Short labels on half tiles** — "Subcutaneous Fat Percentage" becomes "Subcut. Fat" so half-width tiles never truncate
 - **Optional 0-100 bars** — hairline progress bars under percentage metrics (`show_bars`)
 - **"Updated …" line** — scales report infrequently, so the footer shows how stale the newest reading is
@@ -67,7 +67,7 @@ Built in the same design language as the [Room Lights Card](https://github.com/Y
 ```yaml
 type: custom:scale-card
 name: Body Composition
-primary: weight            # headline metric, defaults to weight
+primary: weight            # headline metric = the header value, not a tile
 show_updated: true
 entities:
   - entity: sensor.weight
@@ -130,7 +130,7 @@ The card registers a visual editor (find it under **Add card → By card → Sma
 | `name`         | string  | **required**   | Display name shown in the card header                                                  |
 | `entities`     | array   | **required**   | List of sensor entities to show. See [Entity options](#entity-options)                 |
 | `icon`         | string  | `mdi:scale`    | Optional header icon override                                                          |
-| `primary`      | string  | *(auto)*       | Headline metric: the value shown in the header status line and the tile highlighted with the accent colour. Accepts an **entity_id** or a metric key. Auto = the `weight` metric if configured, otherwise the first entity. The visual editor writes an entity_id, so whatever you pick in the dropdown is what renders |
+| `primary`      | string  | *(auto)*       | Headline metric: the value shown under the card name. Accepts an **entity_id** or a metric key. The entity you pick is the header, so it is **not** rendered as a tile below it. Auto = the `weight` metric if configured, otherwise the first entity. The visual editor writes an entity_id, so whatever you pick in the dropdown is what renders |
 | `show_updated` | boolean | `false`        | Footer line: `Updated 12 min ago`, `Updated 2 hr ago`, `Updated 2 d ago`, then a date  |
 | `show_bars`    | boolean | `false`        | Hairline 0-100 bar under percentage tiles                                              |
 | `compact`      | boolean | `false`        | Tighter layout: smaller header, no gap between tiles, tighter padding                  |
@@ -174,6 +174,7 @@ A tile with no `metric` key falls back to the entity's `friendly_name` and `mdi:
 
 - **Tap a tile** — opens the more-info dialog for that sensor.
 - **Tap the header** — opens the more-info dialog for the headline metric.
+- **The headline metric renders once** — it lives in the header and is excluded from the tile grid, so you never see the same number twice.
 - **Keyboard** — `Enter`/`Space` on a focused tile or header does the same.
 - Values are formatted with thousands separators (`1,732 cal`) and trailing zeros trimmed (`20.3%`, not `20.30%`).
 - If a sensor is `unavailable` or `unknown`, its tile is dimmed and shows `Unavailable` / `Unknown`.
@@ -269,7 +270,7 @@ The card formats the entity's **state** as a number. If your integration stores 
 That tile has no `metric` key. Add one from the [Metric keys](#metric-keys) table to get the label, icon, unit and decimals.
 
 **The card is not in the picker**
-Hard-refresh the browser (`Ctrl+Shift+R` / `Cmd+Shift+R`). If it's still missing, open the browser console — a `SCALE-CARD v1.0.1` banner is logged on load. If you don't see it, the resource didn't load; double-check the URL and that the file is on disk.
+Hard-refresh the browser (`Ctrl+Shift+R` / `Cmd+Shift+R`). If it's still missing, open the browser console — a `SCALE-CARD v1.1.0` banner is logged on load. If you don't see it, the resource didn't load; double-check the URL and that the file is on disk.
 
 ---
 
@@ -279,7 +280,7 @@ Hard-refresh the browser (`Ctrl+Shift+R` / `Cmd+Shift+R`). If it's still missing
 npm install
 npm run build      # one-off production build into ./dist
 npm start          # rollup watch mode
-npm test           # vitest (75 cases over the formatting + resolution layer)
+npm test           # vitest (77 cases over the formatting + resolution layer)
 ```
 
 The built file is `dist/scale-card.js` — `hacs.json` points at this path (`content_in_root: false`).

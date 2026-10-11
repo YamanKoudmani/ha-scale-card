@@ -298,7 +298,7 @@ export class ScaleCardEditor extends LitElement {
       return 'When set, this icon always shows in the header. When left empty, the header shows mdi:scale.';
     }
     if (schema.name === 'primary') {
-      return 'The value shown under the card name, and the tile highlighted with the accent colour. Pick one of the configured entities, or leave Auto to use Weight (falling back to the first entity).';
+      return 'The value shown under the card name. The entity you pick here is the headline, so it is NOT repeated as a tile below it. Auto uses Weight when configured, otherwise the first entity.';
     }
     if (schema.name === 'show_updated') {
       return 'Shows how old the newest reading is (e.g. "Updated 2 hr ago").';
